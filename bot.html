@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reward Task Example</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <!-- Monetag Ad Script -->
+    <script src='//niphaumeenses.net/vignette.min.js' data-zone='8951940' data-sdk='show_8951940'></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; margin: 0; font-family: Arial, sans-serif;
+            background-image:url(https://i.postimg.cc/FKJbP12Z/rm21-texture-jite-47.jpg);
+            color: #bbecffff; padding: 20px; box-sizing: border-box; padding-bottom: 90px;
+        }
+        .user-card, .ad-container, .ad-windrow {
+            background-image: url(https://i.postimg.cc/FKJbP12Z/rm21-texture-jite-47.jpg);
+            border: 2px solid #0040ff; border-radius: 15px; width: 90%; max-width: 400px;
+            margin: 20px auto; color: #ffff; box-sizing: border-box; padding: 20px; text-align: center;
+        }
+        .reward-button, .withdraw-section button, .modal-content button {
+            background-color: #598cff; padding: 15px; font-size: 16px; margin-top: 15px;
+            border-radius: 5px; cursor: pointer; color: #fff; border: none; width: 100%;
+        }
+        .reward-button:hover, .withdraw-section button:hover, .modal-content button:hover {
+            background-color: rgb(128,153,255);
+        }
+        .bottom-nav { display: flex; justify-content: space-around; position: fixed; bottom: 0;
+            width: 100%; max-width: 600px; background: #333; padding: 15px 0; box-sizing: border-box;
+        }
+        .bottom-nav a { text-align: center; color: #bbecffff; font-size: 1.2em; text-decoration: none; }
+        .bottom-nav a:hover { color: #fff700; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center;
+            visibility: hidden; opacity: 0; transition: visibility 0.3s, opacity 0.3s; padding: 20px; box-sizing: border-box;
+        }
+        .modal.active { visibility: visible; opacity: 1; }
+        .modal-content { background: #333; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px;
+            text-align: center; border: 2px solid #bbecffff; color: #bbecffff; box-sizing: border-box;
+        }
+        .modal-content input, .modal-content select {
+            width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;
+            font-size: 16px; background-color: #222; color: #bbecffff; box-sizing: border-box;
+        }
+        .referral-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 64, 255, 0.2);
+            border-radius: 8px;
+        }
+        #referralLink {
+            background: #222;
+            padding: 8px;
+            border-radius: 5px;
+            word-break: break-all;
+            margin-top: 5px;
+            display: inline-block;
+        }
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .user-table th, .user-table td {
+            padding: 8px;
+            border: 1px solid #444;
+            text-align: left;
+        }
+        .user-table th {
+            background-color: #0040ff;
+            color: white;
+        }
+        .user-table tr:nth-child(even) {
+            background-color: #222;
+        }
+        .user-table tr:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-card">
+        <div class="user-info">
+            <div class="user-details">
+                <h2 id="userName">Your Name</h2>
+                <p>Number - <span id="userNumber">000000</span></p>
+            </div>
+        </div>
+        <div class="balance-info">
+            <p>Life Time Earning: $<span id="userPoints">0.00</span></p>
+            <p>Balance: $<span id="userBalance">0.00</span></p>
+            <div class="referral-info">
+                <p>Referral Earnings: $<span id="referralEarnings">0.00</span></p>
+                <p>Total Referrals: <span id="totalReferrals">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="ad-container">
+        <h1>Complete Reward Task</h1>
+        <button class="reward-button" onclick="showRewardedAd()">Reward Task</button>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="#"><i class="fas fa-home"></i>Home</a>
+        <a href="#" onclick="openShareModal()"><i class="fas fa-share-alt"></i>Share</a>
+        <a href="#" onclick="openDeveloperModal()"><i class="fas fa-user-tie"></i>Developer</a>
+        <a href="#" onclick="openWithdrawModal()"><i class="fas fa-money-check"></i> Withdraw</a>
+    </div>
+
+    <!-- User Info Modal -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <h3>What's your name and number?</h3>
+            <input type="text" id="inputName" placeholder="Enter your name">
+            <input type="text" id="inputNumber" placeholder="Enter your number">
+            <button onclick="saveUserInfo()">Save</button>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div class="modal" id="withdrawModal">
+        <div class="modal-content">
+            <h3>Withdraw Funds</h3>
+            <p>Available Balance: $<span id="availableBalance"></span></p>
+            <input type="number" id="withdrawAmount" placeholder="Enter amount to withdraw" min="0" step="0.01">
+            <select id="withdrawMethod">
+                <option value="">Select Method</option>
+                <option value="Bkash">Bkash</option>
+                <option value="Nagad">Nagad</option>
+                <option value="PayPal">PayPal</option>
+            </select>
+            <input type="text" id="paymentDetails" placeholder="Enter payment details">
+            <button onclick="processWithdrawal()">Request Withdrawal</button>
+            <button onclick="closeWithdrawModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <h3>Share Your Referral Link</h3>
+            <p>Earn $10 for each friend who joins using your link!</p>
+            <div id="referralLinkContainer">
+                <p>Your referral link:</p>
+                <div id="referralLink">Loading...</div>
+            </div>
+            <button onclick="copyReferralLink()"><i class="fas fa-copy"></i> Copy Link</button>
+            <button onclick="shareViaTelegram()"><i class="fab fa-telegram"></i> Share on Telegram</button>
+            <button onclick="closeShareModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Developer Modal -->
+    <div class="modal" id="developerModal">
+        <div class="modal-content" style="max-width: 95%; max-height: 80vh; overflow-y: auto;">
+            <h3>User Statistics</h3>
+            <p>Total Users: <span id="totalUsers">0</span></p>
+            <p>Total Earnings Distributed: $<span id="totalEarnings">0.00</span></p>
+            
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Number</th>
+                        <th>Total Earnings</th>
+                        <th>Referrals</th>
+                        <th>Last Active</th>
+                    </tr>
+                </thead>
+                <tbody id="userListBody">
+                    <!-- User data will be loaded here -->
+                </tbody>
+            </table>
+            
+            <button onclick="closeDeveloperModal()" style="margin-top: 20px;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCyA1oQDRiUEs1t6jbKATLJS99nvnnXT7o",
+            authDomain: "sexinlife-66926.firebaseapp.com",
+            databaseURL: "https://sexinlife-66926-default-rtdb.firebaseio.com",
+            projectId: "sexinlife-66926",
+            storageBucket: "sexinlife-66926.appspot.com",
+            messagingSenderId: "1082487490310",
+            appId: "1:1082487490310:web:90517d29a852895abfc087",
+            measurementId: "G-24X67RQQ18"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let points = 0;
+        let balance = 0;
+        let referralEarnings = 0;
+        let totalReferrals = 0;
+        let userId = '';
+        let isReferred = false;
+        let userName = '';
+        let userNumber = '';
+
+        // Load saved data
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check for referral in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const referralId = urlParams.get('ref');
+            
+            // Generate or get user ID
+            userId = localStorage.getItem('userId');
+            if (!userId) {
+                userId = generateUserId();
+                localStorage.setItem('userId', userId);
+                
+                // Check if this is a referral
+                if (referralId && referralId !== userId) {
+                    isReferred = true;
+                    localStorage.setItem('referredBy', referralId);
+                    notifyNewReferral(referralId, userId);
+                }
+            } else if (referralId && referralId !== userId) {
+                console.log("Existing user clicked referral link");
+            }
+            
+            // Load user data
+            userName = localStorage.getItem('userName');
+            userNumber = localStorage.getItem('userNumber');
+            if (userName && userNumber) {
+                document.getElementById('userName').textContent = userName;
+                document.getElementById('userNumber').textContent = userNumber;
+                updateUserInFirebase();
+            } else {
+                document.getElementById('userModal').classList.add('active');
+            }
+
+            points = parseFloat(localStorage.getItem('userPoints') || '0');
+            balance = parseFloat(localStorage.getItem('userBalance') || '0.00');
+            referralEarnings = parseFloat(localStorage.getItem('referralEarnings') || '0.00');
+            totalReferrals = parseInt(localStorage.getItem('totalReferrals') || '0');
+            updateBalance();
+            
+            // Load user data from Firebase
+            loadUserDataFromFirebase();
+        });
+
+        function generateUserId() {
+            return 'user-' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function saveUserInfo() {
+            userName = document.getElementById('inputName').value;
+            userNumber = document.getElementById('inputNumber').value;
+            if (userName && userNumber) {
+                localStorage.setItem('userName', userName);
+                localStorage.setItem('userNumber', userNumber);
+                document.getElementById('userName').textContent = userName;
+                document.getElementById('userNumber').textContent = userNumber;
+                document.getElementById('userModal').classList.remove('active');
+                
+                const referredBy = localStorage.getItem('referredBy');
+                if (referredBy && isReferred) {
+                    console.log(`User ${userName} was referred by ${referredBy}`);
+                    // Add referral bonus to referrer
+                    addReferralBonus(referredBy);
+                }
+                
+                // Update user in Firebase
+                updateUserInFirebase();
+            } else {
+                alert("Please enter both your name and number.");
+            }
+        }
+
+        function updateUserInFirebase() {
+            if (!userId || !userName || !userNumber) return;
+            
+            const userRef = database.ref('users/' + userId);
+            userRef.set({
+                name: userName,
+                number: userNumber,
+                points: points,
+                balance: balance,
+                referralEarnings: referralEarnings,
+                totalReferrals: totalReferrals,
+                lastActive: new Date().toISOString()
+            });
+        }
+
+        function loadUserDataFromFirebase() {
+            if (!userId) return;
+            
+            const userRef = database.ref('users/' + userId);
+            userRef.once('value').then((snapshot) => {
+                const userData = snapshot.val();
+                if (userData) {
+                    points = userData.points || points;
+                    balance = userData.balance || balance;
+                    referralEarnings = userData.referralEarnings || referralEarnings;
+                    totalReferrals = userData.totalReferrals || totalReferrals;
+                    
+                    localStorage.setItem('userPoints', points);
+                    localStorage.setItem('userBalance', balance.toFixed(2));
+                    localStorage.setItem('referralEarnings', referralEarnings.toFixed(2));
+                    localStorage.setItem('totalReferrals', totalReferrals);
+                    
+                    updateBalance();
+                }
+            });
+        }
+
+        function addReferralBonus(referrerId) {
+            const bonusAmount = 10.00;
+            const referrerRef = database.ref('users/' + referrerId);
+            
+            referrerRef.transaction((user) => {
+                if (user) {
+                    user.balance = (user.balance || 0) + bonusAmount;
+                    user.referralEarnings = (user.referralEarnings || 0) + bonusAmount;
+                    user.totalReferrals = (user.totalReferrals || 0) + 1;
+                }
+                return user;
+            });
+            
+            // Update current user's referred status
+            const userRef = database.ref('users/' + userId);
+            userRef.update({
+                referredBy: referrerId
+            });
+        }
+
+        function showRewardedAd() {
+            if (typeof show_8951940 === 'function') {
+                show_8951940().then(() => {
+                    const earnings = 1000.10;
+                    points += earnings;
+                    balance += earnings;
+                    localStorage.setItem('userPoints', points);
+                    localStorage.setItem('userBalance', balance.toFixed(2));
+                    updateBalance();
+                    
+                    // Record transaction in Firebase
+                    recordTransaction('task_reward', earnings);
+                    
+                    // Update user in Firebase
+                    updateUserInFirebase();
+                    
+                    alert('You have completed the Reward Task and earned $0.10');
+                }).catch(error => {
+                    alert('Failed to show rewarded ad.');
+                    console.error('Ad error:', error);
+                });
+            } else {
+                alert('Rewarded ad not available.');
+            }
+        }
+
+        function recordTransaction(type, amount) {
+            if (!userId) return;
+            
+            const transactionsRef = database.ref('transactions').push();
+            transactionsRef.set({
+                userId: userId,
+                type: type,
+                amount: amount,
+                date: new Date().toISOString(),
+                userName: userName,
+                userNumber: userNumber
+            });
+        }
+
+        function updateBalance() {
+            document.getElementById('userPoints').textContent = points.toFixed(2);
+            document.getElementById('userBalance').textContent = balance.toFixed(2);
+            document.getElementById('referralEarnings').textContent = referralEarnings.toFixed(2);
+            document.getElementById('totalReferrals').textContent = totalReferrals;
+            localStorage.setItem('userPoints', points);
+            localStorage.setItem('userBalance', balance.toFixed(2));
+            localStorage.setItem('referralEarnings', referralEarnings.toFixed(2));
+            localStorage.setItem('totalReferrals', totalReferrals);
+        }
+
+        function openWithdrawModal() {
+            document.getElementById('availableBalance').textContent = balance.toFixed(2);
+            document.getElementById('withdrawModal').classList.add('active');
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').classList.remove('active');
+        }
+
+        function openShareModal() {
+            const referralLink = `${window.location.href.split('?')[0]}?ref=${userId}`;
+            document.getElementById('referralLink').textContent = referralLink;
+            document.getElementById('shareModal').classList.add('active');
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('active');
+        }
+
+        function openDeveloperModal() {
+            document.getElementById('developerModal').classList.add('active');
+            fetchUserDataFromFirebase();
+        }
+
+        function closeDeveloperModal() {
+            document.getElementById('developerModal').classList.remove('active');
+        }
+
+        function fetchUserDataFromFirebase() {
+            const usersRef = database.ref('users');
+            usersRef.once('value').then((snapshot) => {
+                const users = [];
+                let totalEarnings = 0;
+                
+                snapshot.forEach((childSnapshot) => {
+                    const user = childSnapshot.val();
+                    user.id = childSnapshot.key;
+                    users.push(user);
+                    totalEarnings += user.points || 0;
+                });
+                
+                document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('totalEarnings').textContent = totalEarnings.toFixed(2);
+                
+                // Populate table
+                const userListBody = document.getElementById('userListBody');
+                userListBody.innerHTML = '';
+                
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.name || 'N/A'}</td>
+                        <td>${user.number || 'N/A'}</td>
+                        <td>$${(user.points || 0).toFixed(2)}</td>
+                        <td>${user.totalReferrals || 0}</td>
+                        <td>${user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}</td>
+                    `;
+                    userListBody.appendChild(row);
+                });
+            });
+        }
+
+        function copyReferralLink() {
+            const referralLink = document.getElementById('referralLink').textContent;
+            navigator.clipboard.writeText(referralLink).then(() => {
+                alert('Referral link copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                const textArea = document.createElement('textarea');
+                textArea.value = referralLink;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('Referral link copied to clipboard!');
+                } catch (err) {
+                    alert('Failed to copy link. Please copy it manually.');
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+
+        function shareViaTelegram() {
+            const referralLink = document.getElementById('referralLink').textContent;
+            const message = `Join this awesome app and earn money together! Use my referral link to get started: ${referralLink}`;
+            const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(message)}`;
+            window.open(telegramUrl, '_blank');
+        }
+
+        function notifyNewReferral(referrerId, newUserId) {
+            console.log(`User ${newUserId} was referred by ${referrerId}`);
+            alert('You joined via a referral link! The referrer will earn $10 when you complete registration.');
+        }
+
+        function processWithdrawal() {
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const method = document.getElementById('withdrawMethod').value;
+            const paymentDetails = document.getElementById('paymentDetails').value;
+
+            if (amount < 100) {
+                alert("Minimum withdrawal amount is $100.");
+                return;
+            }
+
+            if (amount > balance) {
+                alert("You don't have enough balance.");
+                return;
+            }
+
+            if (!method) {
+                alert("Please select a withdrawal method.");
+                return;
+            }
+
+            if (!paymentDetails) {
+                alert("Please enter payment details.");
+                return;
+            }
+
+            balance -= amount;
+            updateBalance();
+            updateUserInFirebase();
+            
+            // Record withdrawal in Firebase
+            const withdrawalsRef = database.ref('withdrawals').push();
+            withdrawalsRef.set({
+                userId: userId,
+                userName: userName,
+                userNumber: userNumber,
+                amount: amount,
+                method: method,
+                details: paymentDetails,
+                status: 'pending',
+                date: new Date().toISOString()
+            });
+            
+            // Record transaction
+            recordTransaction('withdrawal', -amount);
+
+            const telegramBotToken = '7576989138:AAE_jSrqoGiY9zj_7JdflD0VdLtwdodM4pI';
+            const telegramChatId = '1647354354';
+            const message = `New Withdrawal Request:\nName: ${userName}\nNumber: ${userNumber}\nAmount: $${amount.toFixed(2)}\nMethod: ${method}\nDetails: ${paymentDetails}\nUser ID: ${userId}`;
+
+            fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    chat_id: telegramChatId,
+                    text: message
+                })
+            }).then(response => {
+                if (response.ok) {
+                    alert(`Withdrawal request of $${amount.toFixed(2)} via ${method} has been submitted.`);
+                } else {
+                    alert('Failed to send withdrawal request to Telegram.');
+                }
+            });
+
+            closeWithdrawModal();
+        }
+    </script>
+</body>
+</html>
