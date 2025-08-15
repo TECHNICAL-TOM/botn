@@ -8,7 +8,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-
 <style>  
     body {  
         font-family: 'Poppins', sans-serif;  
@@ -56,8 +55,6 @@
         border: none;  
         font-size: 16px;  
     }
-    
-    /* Button Styles */
     button.login-btn, button.check-btn, button.copy-btn, #clamsBtn {  
         padding: 12px 25px;  
         border: none;  
@@ -81,10 +78,7 @@
         margin: 0;  
         transition: all 0.3s ease;  
     }  
-    button:hover {  
-        filter: brightness(1.1);  
-    }  
-
+    button:hover { filter: brightness(1.1); }  
     .register-btn, .telegram-btn, .youtube-btn, .health-btn {  
         padding: 12px 25px;  
         border: none;  
@@ -105,7 +99,6 @@
         text-decoration: none;  
         line-height: 1.5;  
     }  
-
     .btn-group {  
         display: flex;  
         flex-wrap: nowrap;  
@@ -118,7 +111,6 @@
         min-width: 110px;  
         margin: 0;  
     }  
-
     .code-box {  
         font-size: 18px;  
         margin: 15px 0;  
@@ -134,8 +126,6 @@
     .ip-info { color: pink; font-size: 16px; }  
     .device-info { color: #00ffff; font-size: 16px; }  
     #loginMsg { color: red; margin: 10px 0; }  
-
-    /* Modal style for UID list */  
     #uidListModal {  
         display: none;  
         position: fixed;   
@@ -152,14 +142,7 @@
         z-index: 9999;  
         text-align: left;  
     }  
-    #claimMsg {  
-        color: #0f0;   
-        font-weight: bold;   
-        margin-top: 10px;   
-        display: none;  
-    }
-    
-    /* Admin Link */
+    #claimMsg { color: #0f0; font-weight: bold; margin-top: 10px; display: none; }
     .admin-link {
         position: fixed;
         bottom: 10px;
@@ -185,7 +168,6 @@
         <span class="ip-info info-line">IP = <span id="ip">Loading...</span></span>  
         <span class="device-info info-line">DEVICE = <span id="device">Loading...</span></span>  
     </div>  
-
     <input type="text" id="userName" placeholder="Enter Your Name">
     <input type="password" id="password" placeholder="Enter Password">  
     <button class="login-btn" onclick="checkPassword()">Login</button>  
@@ -202,23 +184,17 @@
         <span class="ip-info info-line">IP = <span id="ip2">Loading...</span></span>  
         <span class="device-info info-line">DEVICE = <span id="device2">Loading...</span></span>  
     </div>  
-
     <input type="text" id="uidInput" placeholder="Enter Your UID">  
     <button class="check-btn" onclick="checkUID()">Check UID</button>  
-
     <div id="result" class="code-box"></div>  
     <button class="copy-btn" onclick="copyCode()" style="display:none; margin: 0 auto;">Copy Code</button>  
-
     <button class="register-btn" onclick="window.location.href='register.html'">Register</button>  
-
     <div class="btn-group">  
         <button class="telegram-btn" onclick="window.open('https://t.me/BDT_404_TEAM')">Telegram</button>  
         <button id="clamsBtn" onclick="showUIDList()">CLAMS</button>  
         <button class="youtube-btn" onclick="window.open('https://youtube.com/@technical-tom')">YouTube</button>  
     </div>  
-
     <a href="health.html" class="health-btn" target="_blank">Health Center</a>  
-
     <div id="claimMsg"></div>
 </div>  
 
@@ -230,119 +206,98 @@
 </div>
 
 <!-- Admin Panel Link -->
-<a href="admin.html" class="admin-link" target="_blank">Admin Panel</a>
+<a href="bdsad.html" class="admin-link" target="_blank">Admin Panel</a>
 
 <script>  
-    // Firebase configuration - REPLACE WITH YOUR CONFIG
-    const firebaseConfig = {
+// Firebase Config
+const firebaseConfig = {
   apiKey: "AIzaSyAOuNhKt--y6enJdevW9y2_ysE85UZpQAs",
   authDomain: "mr404world.firebaseapp.com",
+  databaseURL: "https://mr404world-default-rtdb.firebaseio.com",
   projectId: "mr404world",
   storageBucket: "mr404world.firebasestorage.app",
   messagingSenderId: "870758854797",
   appId: "1:870758854797:web:d15d82c9638b7ad0d4f2c4",
   measurementId: "G-MM021SL5X2"
-    };
-    
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    
-    // Global variables
-    let dailyLimit = 20;
-    let giftCode = "929410";
-    
-    // Load settings from Firebase
-    function loadSettings() {
-        database.ref('settings/').once('value').then(snapshot => {
-            const settings = snapshot.val() || {};
-            if (settings.dailyLimit) dailyLimit = settings.dailyLimit;
-            if (settings.giftCode) giftCode = settings.giftCode;
-            document.getElementById('dailyLimitDisplay').textContent = dailyLimit;
-        });
+};
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// Variables
+let dailyLimit = 20;
+let giftCode = "929410";
+
+// Load settings
+function loadSettings() {
+    database.ref('settings/').once('value').then(snapshot => {
+        const settings = snapshot.val() || {};
+        if (settings.dailyLimit) dailyLimit = settings.dailyLimit;
+        if (settings.giftCode) giftCode = settings.giftCode;
+        document.getElementById('dailyLimitDisplay').textContent = dailyLimit;
+    });
+}
+
+// Time
+function updateTime() {  
+    const now = new Date();  
+    const day = String(now.getDate()).padStart(2, '0');  
+    const month = String(now.getMonth() + 1).padStart(2, '0');  
+    const year = String(now.getFullYear()).slice(-2);  
+    const date = `${day}/${month}/${year}`;  
+    const time = now.toLocaleTimeString();  
+    document.getElementById('date').innerText = date;  
+    document.getElementById('time').innerText = time;  
+    document.getElementById('date2').innerText = date;  
+    document.getElementById('time2').innerText = time;  
+}  
+setInterval(updateTime, 1000); updateTime();  
+
+// Device
+function detectDevice() {  
+    const ua = navigator.userAgent;  
+    if (/Android/i.test(ua)) {  
+        const match = ua.match(/Android.*;\\s([^;]+)\\sBuild/i);  
+        return match && match[1] ? match[1].replace(/;/g, '').trim() : "Android Device";  
+    } else if (/iPhone|iPad|iPod/i.test(ua)) {  
+        return "Apple " + ua.match(/iPhone|iPad|iPod/i)[0];  
+    } else if (/Windows NT/i.test(ua)) {  
+        return "Windows PC";  
+    } else if (/Macintosh/i.test(ua)) {  
+        return "Mac Computer";  
+    } else if (/Linux/i.test(ua)) {  
+        return "Linux Device";  
     }
-    
-    // তারিখ ও সময় আপডেট  
-    function updateTime() {  
-        const now = new Date();  
-        const day = String(now.getDate()).padStart(2, '0');  
-        const month = String(now.getMonth() + 1).padStart(2, '0');  
-        const year = String(now.getFullYear()).slice(-2);  
-        const date = `${day}/${month}/${year}`;  
-        const time = now.toLocaleTimeString();  
-          
-        document.getElementById('date').innerText = date;  
-        document.getElementById('time').innerText = time;  
-        document.getElementById('date2').innerText = date;  
-        document.getElementById('time2').innerText = time;  
-    }  
-    setInterval(updateTime, 1000);  
-    updateTime();  
-  
-    // ডিভাইস ডিটেকশন  
-    function detectDevice() {  
-        const ua = navigator.userAgent;  
-        let deviceInfo = "";  
-          
-        if (/Android/i.test(ua)) {  
-            const match = ua.match(/Android.*;\s([^;]+)\sBuild/i);  
-            deviceInfo = match && match[1] ? match[1].replace(/;/g, '').trim() : "Android Device";  
-        }  
-        else if (/iPhone|iPad|iPod/i.test(ua)) {  
-            deviceInfo = "Apple " + ua.match(/iPhone|iPad|iPod/i)[0];  
-        }  
-        else if (/Windows NT/i.test(ua)) {  
-            deviceInfo = "Windows PC";  
-        }  
-        else if (/Macintosh/i.test(ua)) {  
-            deviceInfo = "Mac Computer";  
-        }  
-        else if (/Linux/i.test(ua)) {  
-            deviceInfo = "Linux Device";  
-        }  
-        else {  
-            deviceInfo = "Unknown Device";  
-        }  
-          
-        return deviceInfo;  
-    }  
-  
-    // তথ্য প্রদর্শন  
-    function displayDeviceInfo() {  
-        fetch('https://api.ipify.org?format=json')  
-            .then(res => res.json())  
-            .then(data => {  
-                document.getElementById('ip').innerText = data.ip;  
-                document.getElementById('ip2').innerText = data.ip;  
-            });  
-          
-        const deviceInfo = detectDevice();  
-        document.getElementById('device').innerText = deviceInfo;  
-        document.getElementById('device2').innerText = deviceInfo;  
-    }  
-      
-    displayDeviceInfo();
-    loadSettings();
-  
-    // Password Check  
-    function checkPassword() {  
-        const name = document.getElementById('userName').value.trim();
-        const pass = document.getElementById('password').value;  
-        
-        if (!name) {
-            document.getElementById('loginMsg').innerText = "Please enter your name!";
-            return;
-        }
-        
-        if (pass === "404TEAM") {  
-            // Save login info to Firebase
+    return "Unknown Device";  
+}  
+function displayDeviceInfo() {  
+    fetch('https://api.ipify.org?format=json')  
+        .then(res => res.json())  
+        .then(data => {  
+            document.getElementById('ip').innerText = data.ip;  
+            document.getElementById('ip2').innerText = data.ip;  
+        });  
+    const deviceInfo = detectDevice();  
+    document.getElementById('device').innerText = deviceInfo;  
+    document.getElementById('device2').innerText = deviceInfo;  
+}  
+
+// Login check with dynamic password
+function checkPassword() {  
+    const name = document.getElementById('userName').value.trim();
+    const pass = document.getElementById('password').value;  
+    if (!name) {
+        document.getElementById('loginMsg').innerText = "Please enter your name!";
+        return;
+    }
+    database.ref('settings/userPassword').once('value').then(snapshot => {
+        const correctPassword = snapshot.val() || "404TEAM";
+        if (pass === correctPassword) {  
             const loginData = {
                 name: name,
                 ip: document.getElementById('ip').innerText,
                 device: document.getElementById('device').innerText,
                 timestamp: new Date().toISOString()
             };
-            
             database.ref('logins/').push(loginData)
                 .then(() => {
                     document.getElementById('loginBox').style.display = "none";  
@@ -355,168 +310,12 @@
         } else {  
             document.getElementById('loginMsg').innerText = "Wrong Password!";  
         }  
-    }  
-  
-    // Check UID
-    function checkUID() {  
-        const uid = document.getElementById('uidInput').value.trim();  
-        const resultDiv = document.getElementById('result');  
-        const copyBtn = document.querySelector('.copy-btn');  
-        const name = document.getElementById('userName').value.trim();
-        const ip = document.getElementById('ip2').innerText;
-        const device = document.getElementById('device2').innerText;
-  
-        if (!uid) {  
-            resultDiv.innerHTML = "<p style='color:red'>Please enter UID!</p>";  
-            copyBtn.style.display = "none";  
-            claimMsg.style.display = "none";  
-            return;  
-        }  
-  
-        // Check daily limit
-        const today = new Date().toDateString();
-        database.ref('claims/').orderByChild('date').equalTo(today).once('value')
-            .then(snapshot => {
-                const claims = snapshot.val() || {};
-                const claimCount = Object.keys(claims).length;
-                
-                if (claimCount >= dailyLimit) {
-                    resultDiv.innerHTML = "<p style='color:orange'>❌ Try Next Day!</p>";  
-                    copyBtn.style.display = "none";  
-                    claimMsg.style.display = "none";  
-                    return;
-                }
-                
-                // Check if UID is valid
-                database.ref('validUIDs/').child(uid).once('value')
-                    .then(uidSnapshot => {
-                        if (uidSnapshot.exists()) {
-                            // Check if UID already used today
-                            database.ref('claims/').orderByChild('uid').equalTo(uid).once('value')
-                                .then(usedSnapshot => {
-                                    let alreadyUsed = false;
-                                    usedSnapshot.forEach(claim => {
-                                        if (claim.val().date === today) {
-                                            alreadyUsed = true;
-                                        }
-                                    });
-                                    
-                                    if (alreadyUsed) {
-                                        resultDiv.innerHTML = `<p style='color:orange'>UID already used today!</p>`;  
-                                        copyBtn.style.display = "none";  
-                                        claimMsg.style.display = "none";  
-                                        return;
-                                    }
-                                    
-                                    // Record the claim
-                                    const claimData = {
-                                        uid: uid,
-                                        name: name,
-                                        ip: ip,
-                                        device: device,
-                                        date: today,
-                                        timestamp: new Date().toISOString(),
-                                        code: giftCode
-                                    };
-                                    
-                                    database.ref('claims/').push(claimData)
-                                        .then(() => {
-                                            resultDiv.innerHTML = `✅ Your Code: <span id="code">${giftCode}</span>`;  
-                                            copyBtn.style.display = "block";  
-                                            
-                                            // Send to Telegram
-                                            sendUIDToTelegram(uid, name, ip, device);  
-                                            
-                                            showClaimSuccess(uid);  
-                                        });
-                                });
-                        } else {
-                            resultDiv.innerHTML = "<p style='color:red'>অনুগ্রহপূর্বক আপনি আপনার UPLINE / টিম লিডারের সাথে যোগাযোগ করুন</p>";  
-                            copyBtn.style.display = "none";  
-                            claimMsg.style.display = "none";  
-                        }
-                    });
-            });
-    }  
-  
-    function showUIDList() {  
-        const today = new Date().toDateString();
-        database.ref('claims/').orderByChild('date').equalTo(today).once('value')
-            .then(snapshot => {
-                const claims = snapshot.val() || {};
-                const claimCount = Object.keys(claims).length;
-                
-                document.getElementById('claimCount').textContent = claimCount;
-                document.getElementById('dailyLimitDisplay').textContent = dailyLimit;
-                
-                const uidListDisplay = document.getElementById('uidListDisplay');
-                uidListDisplay.innerHTML = "";
-                
-                if (claimCount === 0) {
-                    uidListDisplay.innerHTML = "<li>No claims today</li>";
-                } else {
-                    Object.values(claims).forEach(claim => {
-                        const li = document.createElement('li');
-                        li.textContent = `${claim.uid} - ${claim.name}`;
-                        uidListDisplay.appendChild(li);
-                    });
-                }
-                
-                document.getElementById('uidListModal').style.display = "block";
-            });
-    }  
-  
-    function closeUIDList() {  
-        document.getElementById('uidListModal').style.display = "none";  
-    }  
-  
-    // ক্লেইম সফল হলে মেসেজ দেখানো ফাংশন  
-    function showClaimSuccess(uid) {  
-        const claimMsg = document.getElementById('claimMsg');
-        claimMsg.innerText = `UID ${uid} claimed successfully! 🎉`;  
-        claimMsg.style.display = "block";  
-  
-        setTimeout(() => {  
-            claimMsg.style.display = "none";  
-        }, 3000);  
-    }  
-  
-    function sendUIDToTelegram(uid, name, ip, device) {  
-        const telegramBotToken = '8387483948:AAFxS5PBvax16JhJhmDI40kkzEzJPjenw3A';  
-        const telegramChatId = '@BDT_404_TEAM';      
-        const time = new Date().toLocaleString();
-        const message = `
-🎉 New Gift Code Claimed 🎉
-Name: ${name}
-UID: ${uid}
-IP: ${ip}
-Device: ${device}
-Time: ${time}
-        `;  
-  
-        fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {  
-            method: 'POST',  
-            headers: { 'Content-Type': 'application/json' },  
-            body: JSON.stringify({  
-                chat_id: telegramChatId,  
-                text: message  
-            })  
-        }).catch(err => console.error('Telegram error:', err));  
-    }  
-  
-    function copyCode() {  
-        const code = document.getElementById('code').innerText;  
-        navigator.clipboard.writeText(code);  
-        alert("Code copied: " + code);  
-    }  
-  
-    // Color animation
-    let hueDegree = 0;  
-    setInterval(() => {  
-        hueDegree += 20;  
-        if (hueDegree > 360) hueDegree = 0;  
-        document.body.style.filter = `hue-rotate(${hueDegree}deg) saturate(1.2)`;  
-    }, 900);  
+    });
+}  
+
+// Init
+displayDeviceInfo();
+loadSettings();
 </script>  
 </body>  
-</html>
+                                                </html>
